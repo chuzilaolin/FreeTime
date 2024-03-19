@@ -37,7 +37,6 @@ private:
 };
 
 void test0() {
-    Base b1;
      
     Derive d1;
     d1.print1();
