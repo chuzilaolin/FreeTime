@@ -12,14 +12,13 @@ bool stringMatch(double k, const string &a, const string &b) {
     if (a.length() == 0 || b.length() == 0) {
         return false;
     }
-    double count = 0; 
+    int count = 0; 
     for (int i = 0; i < a.length(); i++) { // a和b长度相等，所以只判断a
         if (a[i] == b[i]) {
             ++count;
         }
     }
-    cout << (count / a.length()) << endl;
-    return k <= (count / a.length());
+    return k <= (count * 1.0 / a.length());
 }
 
 void test0() {
