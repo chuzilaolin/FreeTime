@@ -3,6 +3,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <cstring>
 #include <algorithm>
 
 using namespace std;
@@ -17,7 +18,7 @@ public:
         cout << "Base -> print1()" << endl;
     }
     virtual void print2() = 0;
-    ~Base() {
+    virtual ~Base() {
         delete [] _name;
         cout << "~Base()" << endl;
     }
@@ -53,10 +54,15 @@ private:
 };
 
 void test0() {
-    Derive d1("tom", "man");
-    d1.print1();
-    d1.print2();
-    d1.Base::print2();
+    // Derive d1("tom", "man");
+    // d1.print1();
+    // d1.print2();
+    // d1.Base::print2();
+
+    Base *p2 = new Derive("jeck", "manxxxxxkkk");
+    p2->print1();
+    p2->print2();
+    delete p2;
 }
 
 int main(void) {
