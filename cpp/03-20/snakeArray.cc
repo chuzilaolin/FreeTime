@@ -4,7 +4,7 @@
 
 using namespace std;
 
-int res[100][100];
+int res[100][10];
 
 void test1(int m, int n)
 {
@@ -77,11 +77,42 @@ void test2(int m, int n) {
     }
     cout << endl;
 }
+
+void test3(int row, int col) {
+    vector<vector<int>> matrix(row, vector<int>(col, 0)); // 初始化为0
+    // 定义方向
+    // (0, 1)   向右
+    // (1, 0)   向下
+    // (0, -1)  向左
+    // (-1, 0)  向上
+    vector<int> xDrection = {0, 1, 0, -1}; // x轴方向
+    vector<int> yDrection = {1, 0, -1, 0}; // y轴方向
+    int x = 0, y = 0; // 初始坐标
+    int d = 0; // 初始方位
+    for(int count = 1; count <= row * col; ++count) {
+        matrix[x][y] = count;
+        int nx = x + xDrection[d], ny = y + yDrection[d]; // 获取下一个位置 
+        if (nx < 0 || nx >= row || ny < 0 || ny >= col || matrix[nx][ny]) { // 撞墙或已遍历过
+            d = (d + 1) % 4; // 转向
+            nx = x + xDrection[d], ny = y + yDrection[d]; // 重新获取下一个位置 
+        }
+        x = nx, y = ny; // 移动
+    } 
+
+    for (const auto &it: matrix) {
+        for (int num : it) {
+            printf("%5d", num);
+        }
+        cout << endl;
+    }
+}
+
 int main(void) {
     auto begin = chrono::high_resolution_clock::now();
     
-    // test1(5, 6);
-    test2(5, 6);
+    // test1(100, 10);
+    // test2(5, 6);
+    test3(100, 10);
 
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end -begin);
