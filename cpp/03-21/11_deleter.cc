@@ -5,6 +5,7 @@
 #include <string>
 #include <algorithm>
 #include <chrono>
+#include <memory>
 
 using namespace std;
 
@@ -16,26 +17,42 @@ void test() {
 }
 
 void test0() {
-    char str[] = "hello world\n";
-    FILE *p = fopen("test.txt", "ab+");
-    fwrite(str, 1, sizeof(str), p);
+    string str("hello world\n");
+    FILE *p = fopen("test.txt", "a+");
+    fwrite(str.c_str(), 1, str.size(), p);
     fclose(p);
 }
 
 void test1() {
-    char str[] = "hello world\n";
-    FILE *p = fopen("test.txt", "a+");
-    fwrite(str, 1, sizeof(str), p);
-    fclose(p);
+    string str("hello world\n");
+    unique_ptr<FILE> up(fopen("test.txt", "a+"));
+    fwrite(str.c_str(), 1, str.size(), up.get());
+    // fclose(up.get());
 }
+
+struct FILECloser {
+    void operator()(FILE *p) {
+        if (p) {
+            fclose(p);
+            cout << "fclose(p)" << endl;
+        }
+    }
+};
+void test2() {
+    string str("hello world\n");
+    unique_ptr<FILE, FILECloser> up(fopen("test.txt", "a+"));
+    fwrite(str.c_str(), 1, str.size(), up.get());
+}
+
 
 
 int main(void) {
     auto begin = chrono::high_resolution_clock::now();
 
-    test();
+    // test();
     // test0();
     // test1();
+    test2();
 
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end -begin);

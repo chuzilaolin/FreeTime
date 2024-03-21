@@ -62,17 +62,26 @@ public:
     ~Child() {
         cout << "~Child()" << endl;
     }
+    void print() {
+        cout << "I'm Child" << endl;
+    }
     weak_ptr<Parent> parentSp;
 };
 void test1() {
-    shared_ptr<Parent> parentPtr(new Parent());
+    // shared_ptr<Parent> parentPtr(new Parent());
+    // shared_ptr<Child> childPtr(new Child());
+    // cout << "parentPtr.use_count(): " << parentPtr.use_count() << endl;
+    // cout << "childPtr.use_count(): " << childPtr.use_count() << endl;
+    // parentPtr->childSp = childPtr;
+    // childPtr->parentSp = parentPtr;
+    // cout << "parentPtr.use_count(): " << parentPtr.use_count() << endl;
+    // cout << "childPtr.use_count(): " << childPtr.use_count() << endl;
+
     shared_ptr<Child> childPtr(new Child());
-    cout << "parentPtr.use_count(): " << parentPtr.use_count() << endl;
-    cout << "childPtr.use_count(): " << childPtr.use_count() << endl;
-    parentPtr->childSp = childPtr;
-    childPtr->parentSp = parentPtr;
-    cout << "parentPtr.use_count(): " << parentPtr.use_count() << endl;
-    cout << "childPtr.use_count(): " << childPtr.use_count() << endl;
+    shared_ptr<Child> childPtr1(childPtr);
+    childPtr.get()->print();
+    childPtr1.get()->print();
+
 }
 
 int main(void) {
