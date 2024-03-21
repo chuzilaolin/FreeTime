@@ -22,6 +22,9 @@ public:
     void print() {
         cout << "_x=" << _x << ", _y=" << _y << endl;
     }
+    ~Point() {
+        cout << "~Point()" << endl;
+    }
 private:
     double _x;
     double _y;
@@ -53,6 +56,7 @@ void test0() {
     Point &&p5 = func1();
     cout << "---------->" << endl;
     cout << "&p5:" << &p5 << endl;;
+    cout << endl << endl << endl;
 }
 
 int main(void) {
