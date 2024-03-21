@@ -5,20 +5,13 @@
 #include <string>
 #include <algorithm>
 #include <chrono>
+#include "10_add"
 
 using namespace std;
 
-double add() {
-    return 0.0;
-}
-
-template<typename T, typename ...Args>
-double add(T t, Args ...args) {
-    return t + add(args...);
-}
 
 void test0() {
-    cout << "res: " << add(1, 2.35, 4, 8.81) << endl;
+    cout << "res: " << add(5.6, 2, 3.4, 9) << endl;
 }
 
 int main(void) {
