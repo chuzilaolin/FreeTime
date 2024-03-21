@@ -47,9 +47,22 @@ void testUniquePtr2() {
     vec.push_back(new Point(5, 7));
 }
 
+void testUniquePtr3() {
+    unique_ptr<Point> up(new Point(1, 7));
+    up->print();
+    Point *p = up.release();
+    p->print();
+    delete p;
+    cout << "----------------->\n";
+    up.reset(new Point(8, 4));
+    // up->print();
+    up.get()->print();
+}
+
 void test0() {
-    testUniquePtr1();
+    // testUniquePtr1();
     // testUniquePtr2();
+    testUniquePtr3();
 }
 
 int main(void) {
