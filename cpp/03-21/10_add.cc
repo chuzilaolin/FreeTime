@@ -8,37 +8,17 @@
 
 using namespace std;
 
-template <typename T>
-class Point {
-public:
-    Point(double x, double y) : _x(x), _y(y) {}
-    T convertX();
-    T convertY();
-    void print(); 
-private:
-    double _x;
-    double _y;
-};
-
-template <typename T>
-T Point<T>::convertX() {
-    return _x;
+double add() {
+    return 0.0;
 }
 
-template <typename T>
-T Point<T>::convertY() {
-    return _y;
+template<typename T, typename ...Args>
+double add(T t, Args ...args) {
+    return t + add(args...);
 }
-
-template<typename T>
-void Point<T>::print() {
-    cout << "_x=" << _x << ", _y=" << _y << endl;
-}
-
 
 void test0() {
-    Point<int> p(3.14, 2.76);
-    p.print();
+    cout << "res: " << add(1, 2.35, 4, 8.81) << endl;
 }
 
 int main(void) {
