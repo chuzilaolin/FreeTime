@@ -8,7 +8,6 @@
 
 using namespace std;
 
-
 void test0() {
     int a = 10;
     int &&b = 8;
