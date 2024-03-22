@@ -57,12 +57,21 @@ void testUniquePtr3() {
     up.reset(new Point(8, 4));
     // up->print();
     up.get()->print();
+    unique_ptr<Point> up2(move(up));
+    cout << "------xxx----------->\n";
+    up2->print();
+}
+
+void testUniquePtr4() {
+    vector<unique_ptr<Point>> vec;
+    unique_ptr<Point> up(new Point(1, 7));
 }
 
 void test0() {
     // testUniquePtr1();
     // testUniquePtr2();
-    testUniquePtr3();
+    // testUniquePtr3();
+    testUniquePtr4();
 }
 
 int main(void) {
