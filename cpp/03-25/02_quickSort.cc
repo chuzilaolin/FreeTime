@@ -9,6 +9,18 @@
 using namespace std;
 
 
+template<typename T, typename Compare = less<T>>
+class MyQsort {
+public:
+    MyQsort(T *arr, size_t size, Compare com);
+    void quick(int left, int right, Compare &com);
+    int partition(int left, int right, Compare &com);
+    void print();
+private:
+    vector<T> vec;
+};
+
+
 void test0() {
 
 }
