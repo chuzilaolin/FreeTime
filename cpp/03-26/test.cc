@@ -39,15 +39,15 @@ private:
 
 void test1(vector<Point> &vec) {
     // Point p = 3;
-    Point p(2, 2);
+    // Point p(2, 2);
     
-    vec.emplace_back(p);
-    // vec.emplace_back(1,2);
+    // vec.emplace_back(p);
+    vec.emplace_back(Point());
 
     // vec.emplace_back(p1);
     // vec.push_back(p1);
     // vec.push_back((3, 5));
-    p.print();
+    // p.print();
 }
 
 void test()
