@@ -31,7 +31,9 @@ public:
         auto it = _hashTable[key];
         int value = it->second;
         // 更新队列
-        _recentData.splice(_recentData.begin(), _recentData, it, ++it);
+        // _recentData.splice(_recentData.begin(), _recentData, it, ++it);
+        _recentData.erase(it);
+        _recentData.push_front({key,value});
         _hashTable[key] = _recentData.begin();
         return value;
     }
@@ -40,7 +42,9 @@ public:
         auto search = _hashTable.find(key);
         if (search != _hashTable.end()) {
             // 更新值
-            _hashTable[key]->second = value;
+            _recentData.erase(_hashTable[key]);
+            _recentData.push_front({key, value});
+            _hashTable[key] = _recentData.begin();
         } else {
             // 判断是否超出容量
             if (_size >= _capacity) {
@@ -86,7 +90,19 @@ void test0() {
 
 void test1() {
     LRUCache *lru = new LRUCache(2); 
+    lru->put(1,1);
+    lru->put(2,2);
+    cout << lru->get(2) << endl;
+    delete lru;
+}
+
+void test2() {
+    LRUCache *lru = new LRUCache(2); 
     lru->put(2,1);
+    lru->put(1,1);
+    lru->put(2,3);
+    lru->put(4,1);
+    cout << lru->get(1) << endl;
     cout << lru->get(2) << endl;
     delete lru;
 }
