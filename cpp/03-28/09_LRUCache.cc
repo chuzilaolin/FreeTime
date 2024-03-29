@@ -17,6 +17,11 @@ public:
             capacity = 10;
         }
     }
+    ~LRUCache() {
+        _hashTable.clear();
+        cout << "~LRUCache()" << endl;
+        /* _recentData.clear(); */
+    }
     int get(int key) {
         auto search = _hashTable.find(key);
         if (search == _hashTable.end()) {
@@ -79,9 +84,16 @@ void test0() {
     delete lru;
 }
 
+void test1() {
+    LRUCache *lru = new LRUCache(2); 
+    lru->put(2,1);
+    cout << lru->get(2) << endl;
+    delete lru;
+}
+
 int main(void) {
     auto begin = chrono::high_resolution_clock::now();
-    test0();
+    test1();
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end -begin);
     cout << "用时: " << duration.count() << "毫秒" << endl;
