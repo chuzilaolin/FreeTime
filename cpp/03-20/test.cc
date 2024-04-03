@@ -5,6 +5,7 @@
 #include <string>
 #include <algorithm>
 #include <chrono>
+#include <pthread.h>
 
 using namespace std;
 
@@ -36,6 +37,13 @@ public:
         return ans;  
     }  
 };
+
+void test1() {
+    pthread_create();
+    pthread_join();
+    sleep();
+        
+}
 
 void test0() {
     int m = 4, n = 4;
