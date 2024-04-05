@@ -1,3 +1,6 @@
+#include <bits/types/clock_t.h>
+#include <cstddef>
+#include <ctime>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -41,12 +44,23 @@ void test2() {
     f(3);
 }
 
+/* int rand() { */
+/*     return 10; */
+/* } */
+
+void test3() {
+    /* srand(clock()); */
+    srand(time(NULL));
+    cout << ::rand() << endl;
+}
+
 int main(void) {
     auto begin = chrono::high_resolution_clock::now();
 #if 0
     test0();
-#endif
     test2();
+#endif
+    test3();
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end -begin);
     cout << "用时: " << duration.count() << "毫秒" << endl;
