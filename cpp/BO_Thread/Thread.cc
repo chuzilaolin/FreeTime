@@ -10,9 +10,10 @@
 
 using namespace std;
 
-Thread::Thread()
+Thread::Thread(ThreadCallback &&cb)
 : _thid(0)
 , _isRunning(false)
+, _cb(move(cb))
 {}
 
 Thread::~Thread() {}
@@ -29,8 +30,8 @@ void Thread::start() {
 void Thread::stop() {
     if (_isRunning) {
         int ret = pthread_join(_thid, nullptr);
-        cout << "pthread_join is start..." << endl;
         if (ret) {
+            cout << "pthread_join is start..." << endl;
             perror("pthread_join");
             return;
         }
@@ -42,7 +43,7 @@ void Thread::stop() {
 void *Thread::threadFunc(void *args) {
     Thread *pth = static_cast<Thread *>(args);
     if (pth) {
-        pth->run();
+        pth->_cb();
     } else {
         cerr << "nullptr == pth" << endl;
     }

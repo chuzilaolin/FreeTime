@@ -20,7 +20,8 @@ public:
     ~MyThread(){};
 private:
     void run() override {
-        while(1) {
+        int i = 3;
+        while(i--) {
             cout << "MyThread is running" << endl;
             sleep(1);            
         }        
@@ -31,7 +32,9 @@ private:
 void test0() {
      MyThread mth;
      mth.start();
+     cout << "before stop()" << endl;
      mth.stop();
+     cout << "after stop()" << endl;
 }
 
 void test1() {
@@ -42,8 +45,8 @@ void test1() {
 
 int main(void) {
     auto begin = chrono::high_resolution_clock::now();
-    /* test0(); */
-    test1();
+    test0();
+    /* test1(); */
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end -begin);
     cout << "用时: " << duration.count() << "毫秒" << endl;
