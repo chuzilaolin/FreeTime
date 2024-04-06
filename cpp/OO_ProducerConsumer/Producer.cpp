@@ -1,19 +1,17 @@
-/**
- * Project FreeTime
- */
-
-
 #include "Producer.h"
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <unistd.h>
 
-/**
- * Producer implementation
- */
+using namespace std;
 
+Producer::Producer(TaskQueue & taskQue)
+: _taskQue(taskQue){
 
-/**
- * @param taskQue
- */
-void Producer::Producer(TaskQueue & taskQue) {
+}
+
+Producer::~Producer() {
 
 }
 
@@ -21,5 +19,12 @@ void Producer::Producer(TaskQueue & taskQue) {
  * @return void
  */
 void Producer::run() {
-    return;
+    srand(clock());
+    int cnt = 20;
+    while (cnt--) {
+        int number = rand() % 100;
+        _taskQue.push(number);
+        cout << ">>Producer produce " << number << endl;  
+        sleep(1);
+    }
 }

@@ -1,23 +1,17 @@
-/**
- * Project FreeTime
- */
-
-
 #ifndef _PRODUCER_H
 #define _PRODUCER_H
 
 #include "Thread.h"
+#include "TaskQueue.h"
 
 
 class Producer: public Thread {
 public: 
     
-/**
- * @param taskQue
- */
-void Producer(TaskQueue & taskQue);
+    Producer(TaskQueue & taskQue);
     
-void run();
+    ~Producer();
+    void run() override;
 private: 
     TaskQueue & _taskQue;
 };
