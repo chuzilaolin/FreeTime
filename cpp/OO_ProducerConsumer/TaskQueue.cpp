@@ -1,44 +1,57 @@
-/**
- * Project FreeTime
- */
-
-
 #include "TaskQueue.h"
+#include "MutexLock.h"
+#include <iostream>
 
-/**
- * TaskQueue implementation
- */
+using namespace std;
 
 
-/**
- * @param queSize
- */
-void TaskQueue::TaskQueue(size_t queSize) {
+TaskQueue::TaskQueue(size_t queSize) 
+: _queSize(queSize)
+, _que()
+, _mutex()
+, _notFull(_mutex)
+, _notEmpty(_mutex)
+{
 
 }
 
-void TaskQueue::~TaskQueue() {
+TaskQueue::~TaskQueue() {
 
 }
 
-/**
- * @param value
- * @return void
- */
 void TaskQueue::push(const int& value) {
-    return;
+    // 1. 上锁(自动解锁)
+    MutexLockGuard autoLock(_mutex);
+    // 2. 判断是否满
+    while(full()) {
+        _notFull.wait();
+    }
+    // 3. 加入队列 
+    _que.push(value);   
+    // 4. 通知消费者 
+    _notEmpty.notify();
 }
 
-/**
- * @return int
- */
 int TaskQueue::pop() {
-    return 0;
+    // 1. 上锁(自动解锁)
+    MutexLockGuard autoLock(_mutex);
+    // 2. 判断是否满
+    while(empty()) {
+        _notEmpty.wait();
+    }
+    // 3. 移出队列 
+    int tmp = _que.front();
+    _que.pop();
+    // 4. 通知消费者 
+    _notFull.notify();
+    return tmp;
 }
 
-/**
- * @return bool
- */
+bool TaskQueue::full() {
+    return _queSize == _que.size();
+}
+
 bool TaskQueue::empty() {
-    return false;
+
+    return 0 == _que.size();
 }
