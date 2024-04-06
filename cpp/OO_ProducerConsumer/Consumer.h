@@ -7,17 +7,14 @@
 #define _CONSUMER_H
 
 #include "Thread.h"
+#include "TaskQueue.h"
 
 
 class Consumer: public Thread {
 public: 
-    
-/**
- * @param taskQue
- */
-void Consumer(TaskQueue & taskQue);
-    
-void run();
+    Consumer(TaskQueue & taskQue);
+    ~Consumer();
+    void run() override;
 private: 
     TaskQueue & _taskQue;
 };

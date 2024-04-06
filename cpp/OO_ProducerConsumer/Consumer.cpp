@@ -1,9 +1,8 @@
-/**
- * Project FreeTime
- */
-
-
 #include "Consumer.h"
+#include <iostream>
+#include <unistd.h>
+
+using namespace std;
 
 /**
  * Consumer implementation
@@ -13,7 +12,11 @@
 /**
  * @param taskQue
  */
-void Consumer::Consumer(TaskQueue & taskQue) {
+Consumer::Consumer(TaskQueue & taskQue)
+: _taskQue(taskQue){
+
+}
+Consumer::~Consumer(){
 
 }
 
@@ -21,5 +24,10 @@ void Consumer::Consumer(TaskQueue & taskQue) {
  * @return void
  */
 void Consumer::run() {
-    return;
+    int cnt = 20;
+    while(cnt--) {
+        int value = _taskQue.pop();
+        cout << "<< Consumer consume " << value << endl;
+        sleep(1);
+    }
 }
