@@ -23,6 +23,7 @@ void test0() {
 
     producer->stop();
     consumer->stop();
+    cout << "---------->end......" << endl;
 }
 
 
