@@ -57,10 +57,16 @@ void test3() {
     print1(d1);
 }
 
+void test4() {
+    Demo d1;
+    print1(ref(d1));
+}
+
 int main() {
     /* test1(); */
     /* test2(); */
-    test3();
+    // test3();
+    test4();
     return 0;
 }
 

@@ -25,6 +25,6 @@ void Producer::run() {
         int number = rand() % 100;
         _taskQue.push(number);
         cout << ">>Producer produce " << number << endl;  
-        sleep(1);
+        /* sleep(1); */
     }
 }

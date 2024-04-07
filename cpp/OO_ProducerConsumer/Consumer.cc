@@ -28,6 +28,6 @@ void Consumer::run() {
     while(cnt--) {
         int value = _taskQue.pop();
         cout << "<< Consumer consume " << value << endl;
-        sleep(1);
+        /* sleep(1); */
     }
 }
