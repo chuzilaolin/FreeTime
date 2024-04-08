@@ -17,10 +17,10 @@ void test0() {
     Producer pro;
     Consumer con;
     
-    unique_ptr<Thread> producer(new Thread(bind(&Producer::produce, &pro, que)));
-    unique_ptr<Thread> consumer(new Thread(bind(&Consumer::consume, &con, que)));
-    /* unique_ptr<Thread> producer(new Thread(bind(&Producer::produce, &pro, ref(que)))); */
-    /* unique_ptr<Thread> consumer(new Thread(bind(&Consumer::consume, &con, ref(que)))); */
+    /* unique_ptr<Thread> producer(new Thread(bind(&Producer::produce, &pro, que))); */
+    /* unique_ptr<Thread> consumer(new Thread(bind(&Consumer::consume, &con, que))); */
+    unique_ptr<Thread> producer(new Thread(bind(&Producer::produce, &pro, ref(que))));
+    unique_ptr<Thread> consumer(new Thread(bind(&Consumer::consume, &con, ref(que))));
     
     producer->start();
     consumer->start();
