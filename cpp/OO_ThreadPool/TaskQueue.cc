@@ -19,7 +19,7 @@ TaskQueue::~TaskQueue() {
 
 }
 
-void TaskQueue::push(const int& value) {
+void TaskQueue::push(ElemType task) {
     // 1. 上锁(自动解锁)
     MutexLockGuard autoLock(_mutex);
     // 2. 判断是否满
@@ -27,12 +27,12 @@ void TaskQueue::push(const int& value) {
         _notFull.wait();
     }
     // 3. 加入队列 
-    _que.push(value);   
+    _que.push(task);   
     // 4. 通知消费者 
     _notEmpty.notify();
 }
 
-int TaskQueue::pop() {
+ElemType TaskQueue::pop() {
     // 1. 上锁(自动解锁)
     MutexLockGuard autoLock(_mutex);
     // 2. 判断是否满
@@ -40,7 +40,7 @@ int TaskQueue::pop() {
         _notEmpty.wait();
     }
     // 3. 移出队列 
-    int tmp = _que.front();
+    ElemType tmp = _que.front();
     _que.pop();
     // 4. 通知消费者 
     _notFull.notify();
