@@ -42,7 +42,7 @@ void test2() {
 }
 
 void test3() {
-    vector<int &> vec;
+    /* vector<int &> vec; // 出错 */
 }
 
 int main(void) {
