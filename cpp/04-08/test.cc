@@ -6,11 +6,16 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+
 
 using namespace std;
 
 void print(int x) {
     cout << "x = " << x << endl;
+    struct sockaddr_in serv_addr;
 }
 
 void test0() {
