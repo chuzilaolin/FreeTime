@@ -41,6 +41,10 @@ void test2() {
     }
 }
 
+void test3() {
+    vector<int &> vec;
+}
+
 int main(void) {
     auto begin = chrono::high_resolution_clock::now();
     /* test0(); */
