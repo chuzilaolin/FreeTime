@@ -25,6 +25,7 @@ ElemType pop();
 bool full();
 // 任务队列是空
 bool empty();
+// 唤醒所有阻塞的消费者线程
 void weakup();
 private: 
     size_t _queSize; // 任务队列大小

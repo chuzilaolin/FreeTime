@@ -57,7 +57,6 @@ bool TaskQueue::full() {
 }
 
 bool TaskQueue::empty() {
-
     return 0 == _que.size();
 }
 

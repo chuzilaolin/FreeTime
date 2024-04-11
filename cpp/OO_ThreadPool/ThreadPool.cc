@@ -36,7 +36,7 @@ void ThreadPool::start() {
  * 关闭线程池
  */
 void ThreadPool::stop() {
-    while (!_taskQue.empty()) {
+    while (!_taskQue.empty()) { // 让队列消费完了再关闭
         sleep(1);
     }
     _isExit = true;
