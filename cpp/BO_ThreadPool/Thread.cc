@@ -30,12 +30,10 @@ void Thread::start() {
 void Thread::stop() {
     if (_isRunning) {
         int ret = pthread_join(_thid, nullptr);
-        cout << "pthread_join is start..." << endl;
         if (ret) {
             perror("pthread_join");
             return;
         }
-        cout << "pthread_join is end..." << endl;
         _isRunning = false;
     }
 }
