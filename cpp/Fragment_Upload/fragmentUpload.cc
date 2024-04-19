@@ -6,6 +6,7 @@
 #include <workflow/WFFacilities.h>
 #include <workflow/WFHttpServer.h>
 #include <workflow/HttpMessage.h>
+#include <workflow/HttpUtil.h>
 
 using std::cout;
 using std::endl;
@@ -48,8 +49,8 @@ void FragmentUpload::init() {
     string fileHash = json["fileHash"];     
     size_t fileSize = json["fileSize"];     
     // 3. 生成分片信息（uploadId、分片个数、分片大小（允许最后一片不一样大）)
-    int chunkSize = _chunkSize;
-    int chunkCount = fileSize / chunkSize + 1;  
+    int chunkSize = _chunkSize; // 分片大小
+    int chunkCount = fileSize / chunkSize + 1;  // 分片个数
     string uploadId = getUserName() + "_" + fileHash;
     // 4. 保存分片信息到redis
     bool ret = true;
@@ -66,7 +67,7 @@ void FragmentUpload::init() {
         "fileHash", fileHash,
         "fileSize", std::to_string(fileSize),
         "chunkCount", std::to_string(chunkCount),
-        "chunkSize", std::to_string(chunkSize) 
+        "chunkSize", std::to_string(chunkSize)
     });
     redisTask->start();
     // 5. 存入数据库（文件主表、用户-文件表）----暂时不做 
@@ -76,6 +77,7 @@ void FragmentUpload::init() {
     if (ret) {
         json["chunkCount"] = chunkCount;
         json["chunkSize"] = chunkSize;
+        json["uploadId"] = uploadId;
         respJson["data"] = json;
     }
     _httpTask->get_resp()->append_output_body(respJson.dump());
@@ -85,11 +87,71 @@ void FragmentUpload::init() {
 // /file/mupload/uppart 上传分片
 void FragmentUpload::uppart() {
     // 1. 从头部取出请求参数
+    protocol::HttpRequest *req = _httpTask->get_req();
+    const http_parser_t *parser = req->get_parser();
+    protocol::HttpHeaderCursor cursor(req);
+    string name;
+    string value;
+    string uploadId;
+    size_t chunkId;
+    size_t chunkSize;
+    string chunkHash;
+    while(cursor.next(name, value)) {
+        cout << "name = " << name << ", value = " << value << endl;
+        if ("uploadId" == name) {
+            uploadId = value;
+        } 
+        else if ("chunkId" == name) {
+            chunkId = std::stoi(value);
+        }
+        else if ("chunkSize" == name) {
+            chunkSize = std::stoi(value);
+        }
+        else if ("chunkHash" == name) {
+            chunkHash = value;
+        }
+    }
+    cout << "uploadId = " << uploadId  << endl;
+    cout << "chunkId = " << chunkId  << endl;
+    cout << "chunkSize = " << chunkSize  << endl;
+    cout << "chunkHash = " << chunkHash  << endl;
     // 2. 从body获取分片数据
+    char *body;
+    size_t bodySize;
+    req->get_parsed_body((const void **)&body, &bodySize);
+    string bodyStr(body, bodySize);
+    bodyStr = bodyStr.substr(bodyStr.find("\r\n\r\n") + 4);
+    bodyStr = bodyStr.substr(0, bodyStr.find("\r\n------") - 1);
     // 3. 更新redis中的分片信息
+    WFRedisTask *redisTask = WFTaskFactory::create_redis_task(
+        "redis://:tiger@8.137.12.216:6379", 0, [](WFRedisTask *redisTask) {
+            protocol::RedisResponse *resp = redisTask->get_resp();
+            protocol::RedisValue value;
+            resp->get_result(value);
+        }
+    );
+    string fileHash = uploadId.substr(uploadId.find("_") + 1);
+    redisTask->get_req()->set_request("SADD", {fileHash, std::to_string(chunkId)});
     // 4. 保存分片数据到本地
+    SeriesWork *series = Workflow::create_series_work(redisTask, nullptr);
+    int fd = open((_fileDir + chunkHash).c_str(), O_CREAT | O_WRONLY, 0666);
+    write(fd, bodyStr.c_str(), bodyStr.length());
+    // WFFileIOTask *pwriteTask = WFTaskFactory::create_pwrite_task(
+    //     (_fileDir + chunkHash).c_str(), buf.c_str(), buf.length(), 0, [](WFFileIOTask *task) {
+    //     if (task->get_state()) {
+    //         cout << "sys error" << strerror(task->get_error()) << endl;
+    //     }
+    //     cout << "pwrite" << endl;
+    // });
+
+    // series->push_back(pwriteTask);
+    series->start();
     // 5. 存入数据库（文件子表）----暂时不做 
     // 6. 返回响应
+    nlohmann::json respJson;
+    respJson["status"] = true;
+    respJson["data"] = "success";
+    _httpTask->get_resp()->append_output_body(respJson.dump());
     cout << "uppart" << endl;
 }
 
@@ -112,17 +174,16 @@ void handler(int signum) {
  * @brief 业务分发函数
 */
 void process(WFHttpTask *httpTask) {
-    protocol::HttpRequest *req = httpTask->get_req();
-    cout << "url = " << req->get_request_uri() << endl;
-    cout << (req->get_request_uri() == "/file/mupload/init") << endl;
     FragmentUpload fragmentUpload(httpTask);
-    cout << "bool is ==> " << (req->get_request_uri() == "/file/mupload/init") << endl;
-    cout << "bool is ==> " << (strcmp(req->get_request_uri(), "/file/mupload/init") == 0) << endl;
-    if (strcmp(req->get_request_uri(), "/file/mupload/init") == 0) {
+    protocol::HttpRequest *req = httpTask->get_req();
+    string url(req->get_request_uri());
+    url = url.substr(0, url.find("?"));
+    cout << "url = " << url << endl;
+    if (url == "/file/mupload/init") {
         fragmentUpload.init();
-    } else if (strcmp(req->get_request_uri(), "/file/mupload/uppart") == 0) {
+    } else if (url == "/file/mupload/uppart") {
         fragmentUpload.uppart();
-    } else if (strcmp(req->get_request_uri(), "/file/mupload/complete") == 0) {
+    } else if (url == "/file/mupload/complete") {
         fragmentUpload.complete();
     }
 }
