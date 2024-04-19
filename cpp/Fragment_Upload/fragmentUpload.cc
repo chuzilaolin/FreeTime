@@ -143,7 +143,6 @@ void FragmentUpload::uppart() {
     //     }
     //     cout << "pwrite" << endl;
     // });
-
     // series->push_back(pwriteTask);
     series->start();
     // 5. 存入数据库（文件子表）----暂时不做 
