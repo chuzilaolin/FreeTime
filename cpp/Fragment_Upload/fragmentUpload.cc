@@ -153,45 +153,26 @@ void FragmentUpload::complete() {
     protocol::HttpRequest *req = _httpTask->get_req();
     string url(req->get_request_uri());
     string uploadId = url.substr(url.find('=') + 1);
-    cout << uploadId << endl;
+    cout << "uploadId = " << uploadId << endl;
     // 2. 查询redis判断是否上传完成
     Redis redis("tcp://8.137.12.216:6379");
-    
-
+    redis.auth("tiger");
+    string totalCount = *redis.hget(uploadId, "chunkCount"); 
+    string fileHash = uploadId.substr(uploadId.find("_") + 1);
+    int uploadedCount= redis.scard(fileHash);
     // 3. 若已完成，更新数据库（文件主表、用户-文件表、文件子表）----暂时不做
     // 4. 返回响应
-    WFRedisTask *redisTask1 = WFTaskFactory::create_redis_task(
-        "redis://:tiger@8.137.12.216:6379", 0, [uploadId, this](WFRedisTask *redisTask) {
-            // 从redis中查询判断是否完成
-            string fileHash = uploadId.substr(uploadId.find("_") + 1);
-            protocol::RedisResponse *resp = redisTask->get_resp();
-            protocol::RedisValue value;
-            resp->get_result(value);
-            string totalCount(value.string_value());
-            WFRedisTask *redisTask2 = WFTaskFactory::create_redis_task(
-                "redis://:tiger@8.137.12.216:6379", 0, [totalCount, this](WFRedisTask *redisTask)
-                {
-                    protocol::RedisResponse *resp = redisTask->get_resp();
-                    protocol::RedisValue value;
-                    resp->get_result(value);
-                    cout << "totalCount = " << totalCount << endl;
-                    int uploadedCount = value.int_value();
-                    cout << "uploadedCount = " << uploadedCount << endl;
-                    // 3. 若已完成，更新数据库（文件主表、用户-文件表、文件子表）----暂时不做
-                    // 4. 返回响应
-                    nlohmann::json respJson;
-                    respJson["status"] = true;
-                    respJson["data"] = uploadedCount == std::stoi(totalCount) ? "yes" : "no";
-                    _httpTask->get_resp()->append_output_body(respJson.dump());
-                    cout << "complete" << endl; });
-            redisTask2->get_req()->set_request("SCARD", {fileHash});
-            redisTask2->start();
-        }
-    );
-    redisTask1->get_req()->set_request("HGET", {uploadId, "chunkCount"});
-    redisTask1->start();
+    nlohmann::json respJson;
+    respJson["status"] = true;
+    respJson["data"] = uploadedCount == std::stoi(totalCount) ? "yes" : "no";
+    _httpTask->get_resp()->append_output_body(respJson.dump());
 }
 
+
+
+/**
+ * 信号处理函数
+*/
 WFFacilities::WaitGroup gWaitGroup(1);
 void handler(int signum) {
     cout << "signal: " << signum << endl;   
