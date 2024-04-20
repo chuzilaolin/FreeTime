@@ -134,16 +134,16 @@ void FragmentUpload::uppart() {
     redisTask->get_req()->set_request("SADD", {fileHash, std::to_string(chunkId)});
     // 4. 保存分片数据到本地
     SeriesWork *series = Workflow::create_series_work(redisTask, nullptr);
-    int fd = open((_fileDir + chunkHash).c_str(), O_CREAT | O_WRONLY, 0666);
-    write(fd, bodyStr.c_str(), bodyStr.length());
-    // WFFileIOTask *pwriteTask = WFTaskFactory::create_pwrite_task(
-    //     (_fileDir + chunkHash).c_str(), buf.c_str(), buf.length(), 0, [](WFFileIOTask *task) {
-    //     if (task->get_state()) {
-    //         cout << "sys error" << strerror(task->get_error()) << endl;
-    //     }
-    //     cout << "pwrite" << endl;
-    // });
-    // series->push_back(pwriteTask);
+    body = (char *)malloc(bodyStr.length());
+    memcpy(body, bodyStr.c_str(), bodyStr.length());
+    cout << "body --> " << body << endl; 
+    WFFileIOTask *pwriteTask = WFTaskFactory::create_pwrite_task(
+        (_fileDir + chunkHash).c_str(), body, strlen(body), 0, [](WFFileIOTask *task) {
+        if (task->get_state()) {
+            cout << "sys error" << strerror(task->get_error()) << endl;
+        }
+    });
+    series->push_back(pwriteTask);
     series->start();
     // 5. 存入数据库（文件子表）----暂时不做 
     // 6. 返回响应
