@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -41,7 +43,7 @@ func main() {
         log.Fatalln(err)
     }
     uploadObject(minioClient, bucket, objectName, filepath);
-
+    time.Sleep(10 * time.Second)
 }
 
 
