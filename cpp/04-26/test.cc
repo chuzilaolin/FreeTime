@@ -19,7 +19,6 @@ public:
     };
     int getAge() const {
         cout << name << endl;
-        /* setName(); */
         return age;
     }
     void setName() {
@@ -28,7 +27,10 @@ public:
 private:
     std::string name;
     const int age = 10;
+    /* static const int sex; */
 };
+
+/* int Test::sex = 1; */
 
 void test0() {
     Test test;
