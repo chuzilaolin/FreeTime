@@ -1,12 +1,15 @@
 #include <arpa/inet.h>
 #include <asm-generic/socket.h>
+#include <ctype.h>
 #include <func.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 void test() {
     // 1. 创建Socket
@@ -68,7 +71,7 @@ void test() {
                 perror("accept error");
                 exit(-1);
             }
-            char str[BUFSIZ];
+            char str[BUFSIZ] = {0};
             printf("%s:%d加入连接\n", inet_ntop(AF_INET, &clie_addr.sin_addr, str, sizeof(str))
                    , ntohs(clie_addr.sin_port));
             // 9.2 客户端的netfd加入待监听集合
@@ -98,7 +101,27 @@ void test() {
         }
         // 10. 处理客户端就绪事件
         for (i = 0; i < FD_SETSIZE; ++i) {
-
+            int netfd = clients[i];
+            char buf[BUFSIZ] = {0};
+            if (netfd > 0 && FD_ISSET(netfd, &redyset)) {
+                // 10.1 处理客户端断开连接
+                if (recv(netfd, buf, sizeof(buf), 0) == 0) {
+                    printf("客户端下线...\n");
+                    close(netfd);
+                    FD_CLR(netfd, &allset);
+                    clients[i] = -1;
+                }
+                // 10.2 回复客户端消息
+                for (int j = 0; j < strlen(buf); ++j) {
+                    buf[j] = toupper(buf[j]);
+                }
+                send(netfd, buf, strlen(buf), 0);
+                write(STDOUT_FILENO, buf, strlen(buf));
+                // 10.3 判断就绪事件是否处理完
+                if (0 == --nready) {
+                    break;
+                }
+            }
         } 
     }
 }
