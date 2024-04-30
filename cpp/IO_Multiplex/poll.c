@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/poll.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -41,30 +42,26 @@ void test() {
     }
     // 4. 开启监听
     listen(socketfd, 128);
-    int maxfd = socketfd; // maxfd用于记录操作系统分配的最大fd;
     // 5. 创建用于存储客户端连接的数组
-    int clients[FD_SETSIZE];
+    struct pollfd clients[OPEN_MAX];
     int i;
-    int maxi = -1; // maxi用于记录客户端占用的下标的位置;
     for (i = 0; i < FD_SETSIZE; ++i) {
-        clients[i] = -1;
+        clients[i].fd = -1;
     }
-    // 6. 把socketfd加入待监听集合
-    fd_set allset; // 用于保存所有文件描述符的集合
-    fd_set redyset; // 用于监听并获取就绪描述符的集合 
-    FD_ZERO(&allset);
-    FD_SET(socketfd, &allset);
+    // 6. 把socketfd加入监听集合
+    clients[0].fd = socketfd;
+    clients[0].events = POLLIN;
+    int maxi = 0; // maxi用于记录客户端占用的下标的位置;
     // 7. loop循环
     while (1) {
         // 8. 开启select监听
-        redyset = allset;
-        int nready = select(maxfd + 1, &redyset, NULL, NULL, NULL);
+        int nready = poll(clients, maxi + 1, -1);
         if (nready < 0) {
             perror("select error");
             exit(-1);
         }
         // 9. 处理socketfd就绪事件
-        if (FD_ISSET(socketfd, &redyset)) {
+        if (clients[0].revents & POLLIN) {
             // 9.1 获取客户端连接
             struct sockaddr_in clie_addr;
             socklen_t clie_addr_len = sizeof(clie_addr);
@@ -77,41 +74,37 @@ void test() {
             printf("%s:%d加入连接\n", inet_ntop(AF_INET, &clie_addr.sin_addr, str, sizeof(str))
                    , ntohs(clie_addr.sin_port));
             // 9.2 客户端的netfd加入待监听集合
-            FD_SET(netfd, &allset);
-            // 9.3 把客户端netfd加入客户端数组
-            for (i = 0; i < FD_SETSIZE; ++i) {
-                if (clients[i] < 0) {
-                    clients[i] = netfd;
+            for (i = 1; i < FD_SETSIZE; ++i) { // 0下标为socketfd,所以从1开始
+                if (clients[i].fd < 0) {
+                    printf("找到位置%d\n", i);
+                    clients[i].fd = netfd;
+                    clients[i].events = POLLIN;
                     break;
                 }
             }
-            if (i == FD_SETSIZE) { // 客户端数组存满了
+            if (i == OPEN_MAX) { // 客户端数组存满了
                 printf("Too many clients\n");
                 exit(-1);
             }
-            // 9.4 更新maxfd 和 maxi
-            if (netfd > maxfd) {
-                maxfd = netfd;
-            }
+            // 9.3 更新maxi
             if (i > maxi) {
                 maxi = i;
             }
-            // 9.5 判断本次的就绪事件是否已处理完
+            // 9.4 判断本次的就绪事件是否已处理完
             if (0 == --nready) {
                 continue;
             }
         }
         // 10. 处理客户端就绪事件
-        for (i = 0; i < FD_SETSIZE; ++i) {
-            int netfd = clients[i];
+        for (i = 1; i < FD_SETSIZE; ++i) {
+            int netfd = clients[i].fd;
             char buf[BUFSIZ] = {0};
-            if (netfd > 0 && FD_ISSET(netfd, &redyset)) {
+            if (netfd > 0 && (clients[i].revents & POLLIN)) {
                 // 10.1 处理客户端断开连接
                 if (recv(netfd, buf, sizeof(buf), 0) == 0) {
                     printf("客户端下线...\n");
                     close(netfd);
-                    FD_CLR(netfd, &allset);
-                    clients[i] = -1;
+                    clients[i].fd = -1;
                 }
                 // 10.2 回复客户端消息
                 for (int j = 0; j < strlen(buf); ++j) {
