@@ -42,82 +42,73 @@ void test() {
     }
     // 4. 开启监听
     listen(socketfd, 128);
-    // 5. 创建用于存储客户端连接的数组
-    struct pollfd clients[OPEN_MAX];
-    int i;
-    for (i = 0; i < FD_SETSIZE; ++i) {
-        clients[i].fd = -1;
+    // 5. 创建epoll监听集合
+    int epfd = epoll_create(OPEN_MAX);
+    if (-1 == epfd) {
+        perror("epoll_create error");
+        exit(-1);
     }
     // 6. 把socketfd加入监听集合
-    clients[0].fd = socketfd;
-    clients[0].events = POLLIN;
-    int maxi = 0; // maxi用于记录客户端占用的下标的位置;
+    struct epoll_event ev;
+    ev.events = EPOLLIN;
+    ev.data.fd = socketfd;
+    ret = epoll_ctl(epfd, EPOLL_CTL_ADD, socketfd, &ev);
+    if (-1 == ret) {
+        perror("epoll_ctl error");
+        exit(-1);
+    }
     // 7. loop循环
     while (1) {
         // 8. 开启select监听
-        int nready = poll(clients, maxi + 1, -1);
+        struct epoll_event readEvents[OPEN_MAX]; 
+        int nready = epoll_wait(epfd, readEvents, OPEN_MAX, -1);
         if (nready < 0) {
             perror("select error");
             exit(-1);
         }
         // 9. 处理socketfd就绪事件
-        if (clients[0].revents & POLLIN) {
-            // 9.1 获取客户端连接
-            struct sockaddr_in clie_addr;
-            socklen_t clie_addr_len = sizeof(clie_addr);
-            int netfd = accept(socketfd, (struct sockaddr *)&clie_addr, &clie_addr_len);
-            if (-1 == netfd) {
-                perror("accept error");
-                exit(-1);
-            }
-            char str[BUFSIZ] = {0};
-            printf("%s:%d加入连接\n", inet_ntop(AF_INET, &clie_addr.sin_addr, str, sizeof(str))
-                   , ntohs(clie_addr.sin_port));
-            // 9.2 客户端的netfd加入待监听集合
-            for (i = 1; i < FD_SETSIZE; ++i) { // 0下标为socketfd,所以从1开始
-                if (clients[i].fd < 0) {
-                    printf("找到位置%d\n", i);
-                    clients[i].fd = netfd;
-                    clients[i].events = POLLIN;
-                    break;
+        for (int i = 0; i < nready; ++i) {
+            if (readEvents[i].data.fd == socketfd) {
+                struct sockaddr_in clie_addr;
+                socklen_t clie_addr_len = sizeof(clie_addr);
+                int netfd = accept(socketfd, (struct sockaddr *)&clie_addr, &clie_addr_len);
+                if (-1 == netfd) {
+                    perror("accept error");
+                    exit(-1);
                 }
-            }
-            if (i == OPEN_MAX) { // 客户端数组存满了
-                printf("Too many clients\n");
-                exit(-1);
-            }
-            // 9.3 更新maxi
-            if (i > maxi) {
-                maxi = i;
-            }
-            // 9.4 判断本次的就绪事件是否已处理完
-            if (0 == --nready) {
-                continue;
-            }
-        }
-        // 10. 处理客户端就绪事件
-        for (i = 1; i < FD_SETSIZE; ++i) {
-            int netfd = clients[i].fd;
-            char buf[BUFSIZ] = {0};
-            if (netfd > 0 && (clients[i].revents & POLLIN)) {
-                // 10.1 处理客户端断开连接
-                if (recv(netfd, buf, sizeof(buf), 0) == 0) {
+                char str[BUFSIZ] = {0};
+                printf("%s:%d加入连接\n", inet_ntop(AF_INET, &clie_addr.sin_addr, str, sizeof(str))
+                       , ntohs(clie_addr.sin_port));
+                // 9.1 把netfd加入监听集合
+                ev.events = EPOLLIN | EPOLLET;
+                ev.data.fd = netfd;
+                ret = epoll_ctl(epfd, EPOLL_CTL_ADD, netfd, &ev);
+                if (-1 == ret) {
+                    perror("epoll_ctl error");
+                    exit(-1);
+                }
+            } else {
+                // 9.2 处理客户端就绪事件
+                int netfd = readEvents[i].data.fd;
+                char buf[BUFSIZ] = {0};
+                int len = recv(netfd, buf, sizeof(buf), 0);
+                if (len == 0) {
                     printf("客户端下线...\n");
+                    ret = epoll_ctl(epfd, EPOLL_CTL_DEL, netfd, NULL);
+                    if (-1 == ret) {
+                        perror("close: epoll_ctl error");
+                        exit(-1);
+                    }
                     close(netfd);
-                    clients[i].fd = -1;
+                } else {
+                    for (int j = 0; j < len; ++j) {
+                        buf[j] = toupper(buf[j]);
+                    }
+                    send(netfd, buf, len, 0);
+                    write(STDOUT_FILENO, buf, len);
                 }
-                // 10.2 回复客户端消息
-                for (int j = 0; j < strlen(buf); ++j) {
-                    buf[j] = toupper(buf[j]);
-                }
-                send(netfd, buf, strlen(buf), 0);
-                write(STDOUT_FILENO, buf, strlen(buf));
-                // 10.3 判断就绪事件是否处理完
-                if (0 == --nready) {
-                    break;
-                }
-            }
-        } 
+            } 
+        }
     }
 }
 
