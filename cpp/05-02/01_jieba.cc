@@ -18,7 +18,7 @@ const char* const IDF_PATH = "./dict/idf.utf8";
 const char* const STOP_WORD_PATH = "./dict/stop_words.utf8";
 
 void test0() {
-    string str = "我来到北京清华大学";
+    string str = "我来,到]北京清华大学";
     cppjieba::Jieba jieba(DICT_PATH,
                           HMM_PATH,
                           USER_DICT_PATH,
