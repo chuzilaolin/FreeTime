@@ -21,10 +21,10 @@ public:
     bool operator<(const Person& other) const {
         bool flag = (age_ == other.age_);
         cout << name_ << ":" << age_ << " --- " << other.name_ << ":" << other.age_ << ", flag = " << flag << endl;
-        if (flag) {
-            return age_ < other.age_;
+        if (flag) { // 如果年龄相同，再比较名称
+            return name_ < other.name_;
         }
-        return name_ < other.name_;
+        return age_ < other.age_;
     }
 
     int getAge() const {
