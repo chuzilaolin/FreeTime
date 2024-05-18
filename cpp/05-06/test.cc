@@ -17,11 +17,12 @@ public:
     }
     // 重载小于运算符
     bool operator<(const Person& other) const {
-        if (isEqual(age_, other.age_)) { // 如果两个数相差3, (类比于simhash相同)
-            /* return age_ < other.age_; */
-            return isEqual(age_, other.age_);
+        bool flag = (age_ == other.age_);
+        cout << name_ << ":" << age_ << " --- " << other.name_ << ":" << other.age_ << ", flag = " << flag << endl;
+        if (flag) { // 如果年龄相同，再比较名称
+            return name_ < other.name_;
         }
-        return name_ < other.name_;
+        return age_ < other.age_;
     }
 
     int getAge() const { return age_; }
